@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Parcel LockBox</title>
+
+    <style>
+
+        body {
+            font-family: Arial;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        h1 {
+            color: darkblue;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 500px;
+        }
+
+        button {
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: lightblue;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Welcome to Parcel LockBox</h1>
+
+    <h3>Select Service</h3>
+
+    <button onclick="showDrop()">Drop Parcel</button>
+    <button onclick="showPickup()">Pickup Parcel</button>
+
+    <!-- ========================= -->
+    <!-- DROP PARCEL SECTION -->
+    <!-- ========================= -->
+
+    <div id="dropSection" style="display:none;">
+
+        <h2>Drop Parcel</h2>
+
+        <label>Postman PIN</label>
+        <input type="password" id="postman_pin" placeholder="Enter Postman PIN">
+
+        <label>Select Available Locker</label>
+
+        <select id="locker_id">
+            <option value="1">Locker 1</option>
+            <option value="2">Locker 2</option>
+            <option value="3">Locker 3</option>
+            <option value="4">Locker 4</option>
+        </select>
+
+        <label>User Phone Number</label>
+        <input type="text" id="phone_no" placeholder="Enter User Phone Number">
+
+        <button onclick="addParcel()">Store Parcel</button>
+
+    </div>
+
+    <!-- ========================= -->
+    <!-- PICKUP PARCEL SECTION -->
+    <!-- ========================= -->
+
+    <div id="pickupSection" style="display:none;">
+
+        <h2>Pickup Parcel</h2>
+
+        <label>User Type</label>
+
+        <select id="role">
+
+            <option value="student">Student</option>
+            <option value="staff">Staff</option>
+            <option value="citizen">Citizen</option>
+
+        </select>
+
+        <label>Locker Number</label>
+
+        <select id="pickup_locker">
+
+            <option value="1">Locker 1</option>
+            <option value="2">Locker 2</option>
+            <option value="3">Locker 3</option>
+            <option value="4">Locker 4</option>
+
+        </select>
+
+        <label>Enter OTP</label>
+        <input type="text" id="otp" placeholder="Enter OTP">
+
+        <button onclick="verifyOTP()">Collect Parcel</button>
+
+    </div>
+
+</div>
+
+<!-- ========================= -->
+<!-- PARCEL TABLE -->
+<!-- ========================= -->
+
+<h2>Parcel Records</h2>
+
+<table id="table">
+
+    <thead>
+
+        <tr>
+
+            <th>Parcel ID</th>
+            <th>User</th>
+            <th>Locker</th>
+            <th>Status</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody></tbody>
+
+</table>
+
+<script>
+
+// =========================
+// SHOW DROP SECTION
+// =========================
+
+function showDrop() {
+
+    document.getElementById("dropSection").style.display = "block";
+
+    document.getElementById("pickupSection").style.display = "none";
+}
+
+// =========================
+// SHOW PICKUP SECTION
+// =========================
+
+function showPickup() {
+
+    document.getElementById("pickupSection").style.display = "block";
+
+    document.getElementById("dropSection").style.display = "none";
+}
+
+// =========================
+// LOAD PARCEL RECORDS
+// =========================
+
+function loadParcels() {
+
+    fetch("get_parcels.php")
+
+    .then(res => res.json())
+
+    .then(data => {
+
+        let table = document.querySelector("#table tbody");
+
+        table.innerHTML = "";
+
+        data.forEach(p => {
+
+            let row = `<tr>
+
+                <td>${p.parcel_id}</td>
+                <td>${p.name}</td>
+                <td>${p.locker_id}</td>
+                <td>${p.status}</td>
+
+            </tr>`;
+
+            table.innerHTML += row;
+        });
+    });
+}
+
+// =========================
+// STORE PARCEL
+// =========================
+
+function addParcel() {
+
+    let postman_pin = document.getElementById("postman_pin").value;
+
+    let locker_id = document.getElementById("locker_id").value;
+
+    let phone_no = document.getElementById("phone_no").value;
+
+    fetch("insert_parcel.php", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+
+        body:
+        `postman_pin=${postman_pin}
+        &locker_id=${locker_id}
+        &phone_no=${phone_no}`
+
+    })
+
+    .then(res => res.text())
+
+    .then(data => {
+
+        alert(data);
+
+        loadParcels();
+    });
+}
+
+// =========================
+// VERIFY OTP
+// =========================
+
+function verifyOTP() {
+
+    let locker_id =
+    document.getElementById("pickup_locker").value;
+
+    let otp =
+    document.getElementById("otp").value;
+
+    fetch("verify_otp.php", {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+
+        body:
+        `locker_id=${locker_id}&otp=${otp}`
+
+    })
+
+    .then(res => res.text())
+
+    .then(data => {
+
+        alert(data);
+
+        loadParcels();
+    });
+}
+
+// =========================
+// AUTO LOAD TABLE
+// =========================
+
+loadParcels();
+
+</script>
+
+</body>
+</html>
